@@ -35,6 +35,9 @@ ARCH ?= $(BUILDARCH)
 ifeq ($(ARCH),aarch64)
         override ARCH=arm64
 endif
+ifeq ($(ARCH),armv7)
+        override ARCH=arm
+endif
 ifeq ($(ARCH),x86_64)
     override ARCH=amd64
 endif
@@ -84,7 +87,7 @@ PUSH_MANIFEST_IMAGES=$(PUSH_IMAGES:$(EXCLUDE_MANIFEST_REGISTRIES)%=)
 PUSH_NONMANIFEST_IMAGES=$(filter-out $(PUSH_MANIFEST_IMAGES),$(PUSH_IMAGES))
 
 GO_BUILD_VER?=v0.17
-CALICO_BUILD?=calico/go-build:$(GO_BUILD_VER)
+CALICO_BUILD?=nixm0nk3y/go-build:latest
 
 # location of docker credentials to push manifests
 DOCKER_CONFIG ?= $(HOME)/.docker/config.json
@@ -94,16 +97,16 @@ CALICO_GIT_VER := $(shell git describe --tags --dirty --always)
 
 # Versions and location of dependencies used in the build.
 BIRD_VER?=v0.3.2-13-g17d14e60
-BIRD_IMAGE ?= calico/bird:$(BIRD_VER)-$(ARCH)
+BIRD_IMAGE ?= nixm0nk3y/bird:latest
 
 # Versions and locations of dependencies used in tests.
 CALICOCTL_VER?=master
 CNI_VER?=master
 RR_VER?=master
 TEST_CONTAINER_NAME_VER?=latest
-CTL_CONTAINER_NAME?=calico/ctl:$(CALICOCTL_VER)-$(ARCH)
-RR_CONTAINER_NAME ?= calico/routereflector:$(RR_VER)
-TEST_CONTAINER_NAME?=calico/test:$(TEST_CONTAINER_NAME_VER)-$(ARCH)
+CTL_CONTAINER_NAME?=nixm0nk3y/ctl:latest
+RR_CONTAINER_NAME ?= nixm0nk3y/routereflector:latest
+TEST_CONTAINER_NAME?=nixm0nk3y/test:latest
 ETCD_VERSION?=v3.3.7
 # If building on amd64 omit the arch in the container name.  Fixme!
 ETCD_IMAGE?=quay.io/coreos/etcd:$(ETCD_VERSION)
@@ -205,7 +208,7 @@ update-felix-confd-libcalico:
 
 $(NODE_CONTAINER_BINARY): vendor
 	docker run --rm \
-		-e GOARCH=$(ARCH) \
+		-e GOARCH=$(ARCH) -e GOARM=7 \
 		-e GOOS=linux \
 		-e LOCAL_USER_ID=$(LOCAL_USER_ID) \
 		-v $(CURDIR)/.go-pkg-cache:/go-cache/:rw \
